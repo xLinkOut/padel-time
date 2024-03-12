@@ -26,7 +26,7 @@ class User(db.Model, UserMixin):
 class Reservation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    match_date = db.Column(db.Date, nullable=False)
+    match_date = db.Column(db.DateTime, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
     
     user = db.relationship('User', backref='reservations', lazy=True)
