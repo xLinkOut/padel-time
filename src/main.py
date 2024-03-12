@@ -8,7 +8,7 @@ from flask_login import LoginManager
 from models import db, User
 from dotenv import load_dotenv
 from flask import Flask
-from routes import auth
+from routes import auth, api
 
 load_dotenv()
 
@@ -38,3 +38,4 @@ with app.app_context():
 
 # Blueprints
 app.register_blueprint(auth, url_prefix="/auth")
+app.register_blueprint(api, url_prefix="/api")
