@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import Blueprint, request
-from flask_login import current_user, logout_user
+from flask_login import current_user, login_user, logout_user
 from models import db, User
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -42,6 +42,7 @@ def login():
     if not user or not check_password_hash(user.password, password):
         return {"success": False, "message": "Invalid credentials"}, 401
     
+    login_user(user)
     user.last_login_at = db.func.now()
     db.session.commit()
 
