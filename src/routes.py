@@ -65,29 +65,35 @@ def logout():
 
 @api.post("/reservations")
 @login_required
-def create_reservation():
+def create_reservations():
     data = request.get_json()
 
-    if not (match_date := data.get("match_date")):
-        return {"success": False, "message": "Match date field is required"}, 400
+    if not (dates := data.get("dates")):
+        return {"success": False, "message": "Dates field is required"}, 400
 
-    try:
-        match_date = datetime.strptime(match_date, "%Y-%m-%dT%H:%M:%S").replace(minute=0, second=0)
-    except ValueError:
-        return {"success": False, "message": "Invalid match date format, must be YYYY-MM-DDTHH:%M:%S"}, 400
+    for date in dates:
+        try:
+            date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S").replace(minute=0, second=0)
+        except ValueError:
+            return {"success": False, "message": "Invalid date format, must be %Y-%m-%dT%H:%M:%S"}, 400
 
-    if not (9 <= match_date.hour <= 23):
-        return {"success": False, "message": "Reservations can only be made between 9 and 23"}, 400
+        if not (9 <= date.hour <= 23):
+            return {"success": False, "message": "Reservations can only be made between 9 and 23"}, 400
 
-    # In ogni caso, sul database c'e' un vincolo unique sulla coppia (utente, data)
-    if Reservation.query.filter_by(user_id=current_user.id, match_date=match_date).first():
-        return {"success": False, "message": "You already have a reservation for that date"}, 409
+        if date < datetime.now():
+            return {"success": False, "message": "Cannot make reservations in the past"}, 400
 
-    reservation = Reservation(user=current_user, match_date=match_date)
-    db.session.add(reservation)
+        # In ogni caso, sul database c'e' un vincolo unique sulla coppia (utente, data)
+        # Potrebbe non essere bloccante, andrebbe ad inserire tutte le altre date
+        if Reservation.query.filter_by(user_id=current_user.id, match_date=date).first():
+            return {"success": False, "message": "You already have a reservation for that date"}, 409
+
+        reservation = Reservation(user=current_user, match_date=date)
+        db.session.add(reservation)
+
     db.session.commit()
 
-    reservation_players_count = Reservation.query.filter_by(match_date=match_date).count()
+    reservation_players_count = Reservation.query.filter_by(match_date=date).count()
 
     return {"success": True, "data": {**reservation.to_dict(), "players": reservation_players_count}}, 201
 
