@@ -86,3 +86,38 @@ def create_reservation():
     reservation_players_count = Reservation.query.filter_by(match_date=match_date).count()
 
     return {"success": True, "data": {"id": reservation.id, "players": reservation_players_count}}, 201
+
+@api.get("/reservations")
+@login_required
+def get_reservations():
+    reservations = Reservation.query.filter_by(user_id=current_user.id).all()
+
+    # TODO: Una vista con il numero di giocatori per slot potrebbe essere comoda
+
+    return {"success": True, "data": [
+        {"players": Reservation.query.filter_by(match_date=reservation.match_date).count() ,"id": reservation.id, "match_date": reservation.match_date.isoformat(), "created_at" : reservation.created_at.isoformat()} for reservation in reservations]}, 200
+
+@api.get("/reservations/<int:reservation_id>")
+@login_required
+def get_reservation(reservation_id):
+    reservation = Reservation.query.get(reservation_id)
+    if not reservation or reservation.user_id != current_user.id:
+        return {"success": False, "message": "Reservation not found"}, 404
+
+    return {"success": True, "data": {"id": reservation.id, "match_date": reservation.match_date.isoformat(), "created_at" : reservation.created_at.isoformat()}}, 200
+
+@api.delete("/reservations/<int:reservation_id>")
+@login_required
+def delete_reservation(reservation_id):
+    reservation = Reservation.query.get(reservation_id)
+    if not reservation or reservation.user_id != current_user.id:
+        return {"success": False, "message": "Reservation not found"}, 404
+
+    # Scelta di design: si mantiene lo storico, senza implementare una soft-delete
+    if reservation.match_date < datetime.now():
+        return {"success": False, "message": "Cannot delete past reservations"}, 400
+
+    db.session.delete(reservation)
+    db.session.commit()
+
+    return {"success": True}, 200
