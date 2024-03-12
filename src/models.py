@@ -22,6 +22,15 @@ class User(db.Model, UserMixin):
     # Flask-Login integration
     def get_id(self):
         return str(self.id)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'role': self.role,
+            'created_at': self.created_at.isoformat(),
+            'last_login_at': self.last_login_at.isoformat() if self.last_login_at else None
+        }
 
 class Reservation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -32,3 +41,11 @@ class Reservation(db.Model):
     user = db.relationship('User', backref='reservations', lazy=True)
 
     __table_args__ = (db.UniqueConstraint('user_id', 'match_date'),)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'match_date': self.match_date.isoformat(),
+            'created_at': self.created_at.isoformat()
+        }

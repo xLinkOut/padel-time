@@ -85,7 +85,7 @@ def create_reservation():
 
     reservation_players_count = Reservation.query.filter_by(match_date=match_date).count()
 
-    return {"success": True, "data": {"id": reservation.id, "players": reservation_players_count}}, 201
+    return {"success": True, "data": {**reservation.to_dict(), "players": reservation_players_count}}, 201
 
 @api.get("/reservations")
 @login_required
@@ -95,7 +95,7 @@ def get_reservations():
     # TODO: Una vista con il numero di giocatori per slot potrebbe essere comoda
 
     return {"success": True, "data": [
-        {"players": Reservation.query.filter_by(match_date=reservation.match_date).count() ,"id": reservation.id, "match_date": reservation.match_date.isoformat(), "created_at" : reservation.created_at.isoformat()} for reservation in reservations]}, 200
+        {"players": Reservation.query.filter_by(match_date=reservation.match_date).count(), **reservation.to_dict()} for reservation in reservations]}, 200
 
 @api.get("/reservations/<int:reservation_id>")
 @login_required
@@ -104,7 +104,7 @@ def get_reservation(reservation_id):
     if not reservation or reservation.user_id != current_user.id:
         return {"success": False, "message": "Reservation not found"}, 404
 
-    return {"success": True, "data": {"id": reservation.id, "match_date": reservation.match_date.isoformat(), "created_at" : reservation.created_at.isoformat()}}, 200
+    return {"success": True, "data": reservation.to_dict()}, 200
 
 @api.delete("/reservations/<int:reservation_id>")
 @login_required
