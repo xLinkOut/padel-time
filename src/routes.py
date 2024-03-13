@@ -71,6 +71,8 @@ def create_reservations():
     if not (dates := data.get("dates")):
         return {"success": False, "message": "Dates field is required"}, 400
 
+    current_slot_date = datetime.now().replace(minute=59, second=59)
+
     for date in dates:
         try:
             date = datetime.strptime(date, "%Y-%m-%dT%H:%M:%S").replace(minute=0, second=0)
@@ -80,7 +82,7 @@ def create_reservations():
         if not (9 <= date.hour <= 23):
             return {"success": False, "message": "Reservations can only be made between 9 and 23"}, 400
 
-        if date < datetime.now():
+        if date < current_slot_date:
             return {"success": False, "message": "Cannot make reservations in the past"}, 400
 
         # In ogni caso, sul database c'e' un vincolo unique sulla coppia (utente, data)
@@ -142,3 +144,4 @@ def delete_reservation(reservation_id):
     db.session.commit()
 
     return {"success": True}, 200
+
