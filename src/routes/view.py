@@ -16,4 +16,4 @@ def signup():
 
 @view_bp.get("/dashboard")
 def dashboard():
-    return render_template("view/dashboard.html")
+    return render_template("dashboard/dashboard.html")
