@@ -177,3 +177,12 @@ def get_matches():
 
     matches = Match.query.join(MatchUser).filter(*filters).all()
     return {"success": True, "data": [match.to_dict() for match in matches]}, 200
+
+@api.get("/matches/<int:match_id>")
+@login_required
+def get_match(match_id):
+    match = Match.query.join(MatchUser).filter(Match.id == match_id, MatchUser.user_id == current_user.id).first()
+    if not match:
+        return {"success": False, "message": "Match not found"}, 404
+    
+    return {"success": True, "data": match.to_dict()}, 200
