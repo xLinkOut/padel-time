@@ -33,3 +33,26 @@ CREATE TABLE IF NOT EXISTS reservation (
     INDEX (user_id),
     INDEX (match_data)
 );
+
+-- Creation of the "match" table
+CREATE TABLE IF NOT EXISTS match (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    match_data DATETIME NOT NULL COMMENT 'Math date'
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Match creation date'
+    
+    UNIQUE(match_data),
+    INDEX (match_data)
+);
+
+-- Creation of the "match_user" table
+CREATE TABLE IF NOT EXISTS match_user (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    match_id INT NOT NULL COMMENT 'Match id',
+    user_id INT NOT NULL COMMENT 'User id'
+    
+    UNIQUE(match_id, user_id),
+    FOREIGN KEY (match_id) REFERENCES match(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+    INDEX (match_id),
+    INDEX (user_id)
+);
