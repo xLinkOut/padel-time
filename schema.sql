@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS user (
     email VARCHAR(512) NOT NULL COMMENT 'User email',
     password VARCHAR(256) NOT NULL COMMENT 'User password',
     role INT NOT NULL DEFAULT 1 COMMENT 'User role',
-    last_login_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'User last login date',
+    last_login_at DATETIME COMMENT 'User last login date',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'User creation date',
 
     UNIQUE (email),
