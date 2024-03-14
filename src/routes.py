@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, request
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from models import Reservation, User, db, Match, MatchUser
+from models import Reservation, User, db, Match, MatchUser, UserRole
 
 auth = Blueprint("auth", __name__)
 api = Blueprint("api", __name__)
@@ -165,3 +165,15 @@ def delete_reservation(reservation_id):
 
     return {"success": True}, 200
 
+@api.get("/matches")
+@login_required
+def get_matches():
+    filters = []
+
+    if match_date := request.args.get("date"):
+        filters.append(Match.match_date == match_date)
+    if current_user.role != UserRole.ADMIN.value:
+        filters.append(MatchUser.user_id == current_user.id)
+
+    matches = Match.query.join(MatchUser).filter(*filters).all()
+    return {"success": True, "data": [match.to_dict() for match in matches]}, 200
