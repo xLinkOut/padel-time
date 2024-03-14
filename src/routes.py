@@ -112,6 +112,9 @@ def create_reservations():
             db.session.add(match_user)
         db.session.commit()
 
+        # Logica per l'invio di email/notifica, maniera asincrona
+        # (Celery+Redis, ad esempio, oppure scheduler in background)
+
         return {"success": True, "data": {**reservation.to_dict(), "players": len(reservation_players), "match": match.to_dict()}}, 201
 
     return {"success": False, "message": "Too many players for that date"}, 400
