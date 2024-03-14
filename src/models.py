@@ -64,7 +64,8 @@ class Match(db.Model):
         return {
             'id': self.id,
             'match_date': self.match_date.isoformat(),
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat(),
+            "players": [match_user.user.to_dict() for match_user in self.players]
         }
 
 
@@ -73,8 +74,8 @@ class MatchUser(db.Model):
     match_id = db.Column(db.Integer, db.ForeignKey('match.id', ondelete='CASCADE'), nullable=False, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False, index=True)
 
-    match = db.relationship('Match', backref='match', lazy=True)
-    user = db.relationship('User', backref='match_users', lazy=True)
+    match = db.relationship('Match', backref='players', lazy=True)
+    user = db.relationship('User', backref='match_users')
 
     __table_args__ = (
         db.UniqueConstraint('match_id', 'user_id'),
