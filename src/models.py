@@ -53,3 +53,36 @@ class Reservation(db.Model):
             "match_date": self.match_date.isoformat(),
             "created_at": self.created_at.isoformat(),
         }
+
+
+class Match(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    match_date = db.Column(db.DateTime, nullable=False, unique=True, index=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'match_date': self.match_date.isoformat(),
+            'created_at': self.created_at.isoformat()
+        }
+
+
+class MatchUser(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey('match.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+
+    __table_args__ = (
+        db.UniqueConstraint('match_id', 'user_id'),
+    )
+
+    match = db.relationship('Match', backref=db.backref('match_users', lazy=True))
+    user = db.relationship('User', backref=db.backref('match_users', lazy=True))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'match_id': self.match_id,
+            'user_id': self.user_id
+        }
