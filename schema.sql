@@ -1,23 +1,23 @@
 -- Creation of the "padel" database
-CREATE DATABASE IF NOT EXISTS padel;
+CREATE DATABASE IF NOT EXISTS padel_time;
 
 -- Creation of the "admin" user
 CREATE USER IF NOT EXISTS 'admin'@'%' IDENTIFIED BY 'password';
-GRANT ALL PRIVILEGES ON padel.* TO 'admin'@'%';
+GRANT ALL PRIVILEGES ON padel_time.* TO 'admin'@'%';
 
--- Use the "padel" database
-USE padel;
+-- Use the "padel_time" database
+USE padel_time;
 
 -- Creation of the "user" table
 CREATE TABLE IF NOT EXISTS user (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(512) NOT NULL COMMENT 'User email',
-    password VARCHAR(256) NOT NULL COMMENT 'User password'
+    password VARCHAR(256) NOT NULL COMMENT 'User password',
     role INT NOT NULL DEFAULT 1 COMMENT 'User role',
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'User creation date'
-    last_login_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'User last login date'
+    last_login_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'User last login date',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'User creation date',
 
-    UNIQUE(email),
+    UNIQUE (email),
     INDEX (email)
 );
 
