@@ -98,9 +98,23 @@ def create_reservations():
 
     db.session.commit()
 
-    reservation_players_count = Reservation.query.filter_by(match_date=date).count()
+    reservation_players = Reservation.query.filter_by(match_date=date).all()
+    reservation_players_count = len(reservation_players)
 
-    return {"success": True, "data": {**reservation.to_dict(), "players": reservation_players_count}}, 201
+    if reservation_players_count < current_app.players_for_match:
+        return {"success": True, "data": {**reservation.to_dict(), "players": len(reservation_players)}}
+
+    elif reservation_players_count == current_app.players_for_match:
+        match = Match(match_date=date)
+        db.session.add(match)
+        for reservation in reservation_players:
+            match_user = MatchUser(match=match, user=reservation.user)
+            db.session.add(match_user)
+        db.session.commit()
+
+        return {"success": True, "data": {**reservation.to_dict(), "players": len(reservation_players), "match": match.to_dict()}}, 201
+
+    return {"success": False, "message": "Too many players for that date"}, 400
 
 
 @api.get("/reservations")
