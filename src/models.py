@@ -70,15 +70,15 @@ class Match(db.Model):
 
 class MatchUser(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    match_id = db.Column(db.Integer, db.ForeignKey('match.id'), nullable=False, index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    match_id = db.Column(db.Integer, db.ForeignKey('match.id', ondelete='CASCADE'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False, index=True)
+
+    match = db.relationship('Match', backref='match', lazy=True)
+    user = db.relationship('User', backref='match_users', lazy=True)
 
     __table_args__ = (
         db.UniqueConstraint('match_id', 'user_id'),
     )
-
-    match = db.relationship('Match', backref=db.backref('match_users', lazy=True))
-    user = db.relationship('User', backref=db.backref('match_users', lazy=True))
 
     def to_dict(self):
         return {
