@@ -16,5 +16,5 @@ class Game(db.Model):
             "slot": self.slot.isoformat(),
             "created_at": self.created_at.isoformat(),
             "created_by": self.created_by,
-            "players": [match_user.user.to_dict() for match_user in self.players],
+            "players": [game_user.user.to_dict() for game_user in self.players],
         }

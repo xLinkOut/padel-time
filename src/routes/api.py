@@ -8,38 +8,37 @@ from flask_login import current_user, login_required
 
 from models import db
 from models.game import Game
-from models.match_user import MatchUser
-from models.reservation import Reservation
+from models.game_user import GameUser
 from models.user import UserRole
 
 api_bp = Blueprint("api", __name__)
 
 
-@api_bp.get("/matches")
+@api_bp.get("/games")
 @login_required
-def get_matches():
+def get_games():
     filters = []
 
     if slot := request.args.get("slot"):
         filters.append(Game.slot == slot)
     if current_user.role != UserRole.ADMIN.value:
-        filters.append(MatchUser.user_id == current_user.id)
+        filters.append(GameUser.user_id == current_user.id)
     elif user_id := request.args.get("user_id"):
-        filters.append(MatchUser.user_id == user_id)
+        filters.append(GameUser.user_id == user_id)
 
-    matches = Game.query.join(MatchUser).filter(*filters).all()
-    return {"success": True, "data": [match.to_dict() for match in matches]}, 200
+    games = Game.query.join(GameUser).filter(*filters).all()
+    return {"success": True, "data": [game.to_dict() for game in games]}, 200
 
 
-@api_bp.get("/matches/<int:match_id>")
+@api_bp.get("/games/<int:game_id>")
 @login_required
-def get_match(match_id):
-    filters = [Game.id == match_id]
+def get_game(game_id):
+    filters = [Game.id == game_id]
     if current_user.role != UserRole.ADMIN.value:
-        filters.append(MatchUser.user_id == current_user.id)
+        filters.append(GameUser.user_id == current_user.id)
     
-    match = Game.query.join(MatchUser).filter(*filters).first()
-    if not match:
-        return {"success": False, "message": "Match not found"}, 404
+    game = Game.query.join(GameUser).filter(*filters).first()
+    if not game:
+        return {"success": False, "message": "Game not found"}, 404
 
-    return {"success": True, "data": match.to_dict()}, 200
+    return {"success": True, "data": game.to_dict()}, 200
