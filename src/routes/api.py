@@ -33,7 +33,11 @@ def search_games():
     filters = []
 
     if slot := request.args.get("slot"):
-        filters.append(Game.slot == slot)
+        try:
+            slot = datetime.strptime(slot, "%Y-%m-%dT%H:%M:%S").replace(minute=0, second=0)
+            filters.append(Game.slot == slot)
+        except ValueError:
+            return {"success": False, "message": "Invalid date format, must be %Y-%m-%dT%H:%M:%S"}, 400
 
     if current_user.role != UserRole.ADMIN.value:
         filters.append(GameUser.user_id == current_user.id)
