@@ -11,6 +11,7 @@ from models import db
 from models.user import User
 from routes.api import api_bp
 from routes.auth import auth_bp
+from routes.view import view_bp
 
 load_dotenv()
 
@@ -46,3 +47,4 @@ with app.app_context():
 # Blueprints
 app.register_blueprint(api_bp, url_prefix="/api")
 app.register_blueprint(auth_bp, url_prefix="/auth")
+app.register_blueprint(view_bp, url_prefix="/")
