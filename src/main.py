@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_login import LoginManager
 
-from models import User, db
+from models import db
+from models.user import User
 from routes.api import api_bp
 from routes.auth import auth_bp
 

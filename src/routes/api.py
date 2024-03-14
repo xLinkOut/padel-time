@@ -6,7 +6,11 @@ from datetime import datetime
 from flask import Blueprint, current_app, request
 from flask_login import current_user, login_required
 
-from models import Match, MatchUser, Reservation, UserRole, db
+from models import db
+from models.match import Match
+from models.match_user import MatchUser
+from models.reservation import Reservation
+from models.user import UserRole
 
 api_bp = Blueprint("api", __name__)
 
