@@ -56,8 +56,9 @@ def create_game():
     if not (slots := data.get("slots")):
         return {"success": False, "message": "<slot> field is required"}, 400
 
+    games = []
     current_slot_date = datetime.now().replace(minute=59, second=59)
-
+    
     for slot in slots:
         try:
             slot = datetime.strptime(slot, "%Y-%m-%dT%H:%M:%S").replace(minute=0, second=0)
@@ -83,16 +84,19 @@ def create_game():
             game = Game(slot=slot, created_by=current_user.id)
             db.session.add(game)
         
+        games.append(game)
+
         game_user = GameUser(game=game, user=current_user)
         db.session.add(game_user)
 
     db.session.commit()
 
-    # Ci sono abbastanza giocatori per iniziare una partita
-    if len(game.players) == current_app.players_for_game:
-        # Logica per l'invio di email/notifica, maniera asincrona
-        # (Celery+Redis, ad esempio, oppure scheduler in background)
-        pass
+    for game in games:
+        # Ci sono abbastanza giocatori per iniziare una partita
+        if len(game.players) == current_app.players_for_game:
+            # Logica per l'invio di email/notifica, maniera asincrona
+            # (Celery+Redis, ad esempio, oppure scheduler in background)
+            pass
 
-    return {"success": True, "data": game.to_dict()}, 201
+    return {"success": True, "data": [game.to_dict() for game in games]}, 201
 
