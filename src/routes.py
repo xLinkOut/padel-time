@@ -157,6 +157,9 @@ def delete_reservation(reservation_id):
     if reservation.match_date < datetime.now():
         return {"success": False, "message": "Cannot delete past reservations"}, 400
 
+    if MatchUser.query.join(Match).filter(Match.match_date == reservation.match_date, MatchUser.user_id == current_user.id).first():
+        return {"success": False, "message": "Cannot delete a reservation while in a match"}, 400
+
     db.session.delete(reservation)
     db.session.commit()
 
