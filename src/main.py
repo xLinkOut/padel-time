@@ -8,7 +8,8 @@ from flask import Flask
 from flask_login import LoginManager
 
 from models import User, db
-from routes import api, auth
+from routes.api import api_bp
+from routes.auth import auth_bp
 
 load_dotenv()
 
@@ -25,15 +26,15 @@ login_manager.init_app(app)
 # Misc
 app.players_for_match = int(os.getenv("PLAYERS_FOR_MATCH", 4))
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(user_id)
 
 
 # SQLAlchemy
-app.config[
-    "SQLALCHEMY_DATABASE_URI"
-] = f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+URI = f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+app.config["SQLALCHEMY_DATABASE_URI"] = URI
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Database
@@ -42,5 +43,5 @@ with app.app_context():
     db.create_all()
 
 # Blueprints
-app.register_blueprint(auth, url_prefix="/auth")
-app.register_blueprint(api, url_prefix="/api")
+app.register_blueprint(api_bp, url_prefix="/api")
+app.register_blueprint(auth_bp, url_prefix="/auth")

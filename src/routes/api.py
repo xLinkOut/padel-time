@@ -4,66 +4,14 @@
 from datetime import datetime
 
 from flask import Blueprint, current_app, request
-from flask_login import current_user, login_required, login_user, logout_user
-from werkzeug.security import check_password_hash, generate_password_hash
+from flask_login import current_user, login_required
 
-from models import Reservation, User, db, Match, MatchUser, UserRole
+from models import Match, MatchUser, Reservation, UserRole, db
 
-auth = Blueprint("auth", __name__)
-api = Blueprint("api", __name__)
+api_bp = Blueprint("api", __name__)
 
 
-@auth.post("/signup")
-def signup():
-    data = request.get_json()
-
-    if not (email := data.get("email")):
-        return {"success": False, "message": "Email field is required"}, 400
-
-    if not (password := data.get("password")):
-        return {"success": False, "message": "Password field is required"}, 400
-
-    if User.query.filter_by(email=email).first():
-        return {"success": False, "message": "A user with that email already exists"}, 409
-
-    user = User(email=email, password=generate_password_hash(password))
-    db.session.add(user)
-    db.session.commit()
-
-    return {"success": True, "data": {"id": user.id}}, 201
-
-
-@auth.post("/login")
-def login():
-    data = request.get_json()
-
-    if not (email := data.get("email")):
-        return {"success": False, "message": "Email field is required"}, 400
-
-    if not (password := data.get("password")):
-        return {"success": False, "message": "Password field is required"}, 400
-
-    user = User.query.filter_by(email=email).first()
-    if not user or not check_password_hash(user.password, password):
-        return {"success": False, "message": "Invalid credentials"}, 401
-
-    login_user(user)
-    user.last_login_at = db.func.now()
-    db.session.commit()
-
-    return {"success": True, "data": {"id": user.id}}, 200
-
-
-@auth.post("/logout")
-def logout():
-    if not current_user.is_authenticated:
-        return {"success": False, "message": "Not logged in"}, 400
-
-    logout_user()
-    return {"success": True}
-
-
-@api.post("/reservations")
+@api_bp.post("/reservations")
 @login_required
 def create_reservations():
     data = request.get_json()
@@ -115,17 +63,18 @@ def create_reservations():
         # Logica per l'invio di email/notifica, maniera asincrona
         # (Celery+Redis, ad esempio, oppure scheduler in background)
 
-        return {"success": True, "data": {**reservation.to_dict(), "players": len(reservation_players), "match": match.to_dict()}}, 201
+        return {
+            "success": True,
+            "data": {**reservation.to_dict(), "players": len(reservation_players), "match": match.to_dict()},
+        }, 201
 
     return {"success": False, "message": "Too many players for that date"}, 400
 
 
-@api.get("/reservations")
+@api_bp.get("/reservations")
 @login_required
 def get_reservations():
     reservations = Reservation.query.filter_by(user_id=current_user.id).all()
-
-    # TODO: Una vista con il numero di giocatori per slot potrebbe essere comoda
 
     return {
         "success": True,
@@ -139,7 +88,7 @@ def get_reservations():
     }, 200
 
 
-@api.get("/reservations/<int:reservation_id>")
+@api_bp.get("/reservations/<int:reservation_id>")
 @login_required
 def get_reservation(reservation_id):
     reservation = Reservation.query.get(reservation_id)
@@ -149,18 +98,21 @@ def get_reservation(reservation_id):
     return {"success": True, "data": reservation.to_dict()}, 200
 
 
-@api.delete("/reservations/<int:reservation_id>")
+@api_bp.delete("/reservations/<int:reservation_id>")
 @login_required
 def delete_reservation(reservation_id):
     reservation = Reservation.query.get(reservation_id)
     if not reservation or reservation.user_id != current_user.id:
         return {"success": False, "message": "Reservation not found"}, 404
 
-    # Scelta di design: si mantiene lo storico, senza implementare una soft-delete
     if reservation.match_date < datetime.now():
         return {"success": False, "message": "Cannot delete past reservations"}, 400
 
-    if MatchUser.query.join(Match).filter(Match.match_date == reservation.match_date, MatchUser.user_id == current_user.id).first():
+    if (
+        MatchUser.query.join(Match)
+        .filter(Match.match_date == reservation.match_date, MatchUser.user_id == current_user.id)
+        .first()
+    ):
         return {"success": False, "message": "Cannot delete a reservation while in a match"}, 400
 
     db.session.delete(reservation)
@@ -168,7 +120,8 @@ def delete_reservation(reservation_id):
 
     return {"success": True}, 200
 
-@api.get("/matches")
+
+@api_bp.get("/matches")
 @login_required
 def get_matches():
     filters = []
@@ -181,11 +134,12 @@ def get_matches():
     matches = Match.query.join(MatchUser).filter(*filters).all()
     return {"success": True, "data": [match.to_dict() for match in matches]}, 200
 
-@api.get("/matches/<int:match_id>")
+
+@api_bp.get("/matches/<int:match_id>")
 @login_required
 def get_match(match_id):
     match = Match.query.join(MatchUser).filter(Match.id == match_id, MatchUser.user_id == current_user.id).first()
     if not match:
         return {"success": False, "message": "Match not found"}, 404
-    
+
     return {"success": True, "data": match.to_dict()}, 200
