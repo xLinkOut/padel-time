@@ -21,38 +21,30 @@ CREATE TABLE IF NOT EXISTS user (
     INDEX (email)
 );
 
--- Creation of the "reservation" table
-CREATE TABLE IF NOT EXISTS reservation (
+-- Creation of the "game" table
+CREATE TABLE IF NOT EXISTS game (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    slot DATETIME NOT NULL COMMENT 'Game date',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Game creation date',
+    created_by INT NOT NULL COMMENT 'User id',
+    
+    FOREIGN KEY (created_by) REFERENCES user(id) ON DELETE CASCADE,
+    
+    UNIQUE (slot),
+    INDEX (slot)
+);
+
+-- Creation of the "game_user" table
+CREATE TABLE IF NOT EXISTS game_user (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    game_id INT NOT NULL COMMENT 'Game id',
     user_id INT NOT NULL COMMENT 'User id',
-    match_data DATETIME NOT NULL COMMENT 'Math date'
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Reservation creation date'
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Game user creation date',
     
-    UNIQUE(user_id, match_data),
+    FOREIGN KEY (game_id) REFERENCES game(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
-    INDEX (user_id),
-    INDEX (match_data)
-);
-
--- Creation of the "match" table
-CREATE TABLE IF NOT EXISTS match (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    match_data DATETIME NOT NULL COMMENT 'Math date'
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Match creation date'
     
-    UNIQUE(match_data),
-    INDEX (match_data)
-);
-
--- Creation of the "match_user" table
-CREATE TABLE IF NOT EXISTS match_user (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    match_id INT NOT NULL COMMENT 'Match id',
-    user_id INT NOT NULL COMMENT 'User id'
-    
-    UNIQUE(match_id, user_id),
-    FOREIGN KEY (match_id) REFERENCES match(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
-    INDEX (match_id),
+    UNIQUE(game_id, user_id),
+    INDEX (game_id),
     INDEX (user_id)
 );
