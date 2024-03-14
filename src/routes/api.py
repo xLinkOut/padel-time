@@ -100,3 +100,23 @@ def create_game():
 
     return {"success": True, "data": [game.to_dict() for game in games]}, 201
 
+@api_bp.delete("/games/<int:game_id>")
+@login_required
+def delete_game(game_id):
+    if not (game := Game.query.join(GameUser).filter(Game.id == game_id).first()):
+        return {"success": False, "message": "Game not found"}, 404
+
+    my_reservation = next((player for player in game.players if player.user_id == current_user.id), None)
+    if not my_reservation:
+        return {"success": False, "message": "Reservation not found"}, 404
+
+    if game.slot < datetime.now():
+        return {"success": False, "message": "Cannot delete past or in progress game"}, 400
+
+    # TODO: Un admin potrebbe voler eliminare un game con tutti i suoi giocatori,
+    # oppure soltanto la prenotazione di giocatori specifici
+   
+    db.session.delete(game if len(game.players) <= 1 else my_reservation)
+    db.session.commit()
+
+    return {"success": True}
