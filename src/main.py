@@ -22,6 +22,8 @@ login_manager = LoginManager()
 login_manager.login_view = ""
 login_manager.init_app(app)
 
+# Misc
+app.players_for_match = int(os.getenv("PLAYERS_FOR_MATCH", 4))
 
 @login_manager.user_loader
 def load_user(user_id):
