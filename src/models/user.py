@@ -21,6 +21,9 @@ class User(db.Model, UserMixin):
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
     last_login_at = db.Column(db.DateTime, nullable=True)
 
+    created_games = db.relationship("Game", backref="organizer", cascade="all, delete-orphan")
+    joined_games = db.relationship("GameUser", backref="user", cascade="all, delete-orphan")
+
     # Flask-Login integration
     def get_id(self):
         return str(self.id)

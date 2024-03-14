@@ -9,9 +9,9 @@ class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     slot = db.Column(db.DateTime, nullable=False, unique=True, index=True)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
-    created_by = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
-
-    organizer = db.relationship("User", backref="created_games")
+    created_by = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="cascade"), nullable=False)
+    
+    players = db.relationship("GameUser", backref="game", cascade="all, delete-orphan")
 
     def to_dict(self):
         return {

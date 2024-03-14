@@ -6,11 +6,8 @@ from models import db
 
 class GameUser(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    game_id = db.Column(db.Integer, db.ForeignKey("game.id", ondelete="CASCADE"), nullable=False, index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
-
-    game = db.relationship("Game", backref="players")
-    user = db.relationship("User", backref="games")
+    game_id = db.Column(db.Integer, db.ForeignKey("game.id", ondelete="cascade"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="cascade"), nullable=False, index=True)
 
     __table_args__ = (db.UniqueConstraint("game_id", "user_id"),)
 
