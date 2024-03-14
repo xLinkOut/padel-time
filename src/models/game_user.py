@@ -9,8 +9,8 @@ class GameUser(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey("game.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
 
-    game = db.relationship("Game", backref="players", lazy=True)
-    user = db.relationship("User", backref="game_users")
+    game = db.relationship("Game", backref="players")
+    user = db.relationship("User", backref="games")
 
     __table_args__ = (db.UniqueConstraint("game_id", "user_id"),)
 
