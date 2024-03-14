@@ -3,7 +3,7 @@
 
 import enum
 
-from flask_login import UserMixin
+from flask_login import UserMixin, current_user
 
 from models import db
 
@@ -26,6 +26,9 @@ class User(db.Model, UserMixin):
         return str(self.id)
 
     def to_dict(self):
+        if current_user.role == UserRole.USER.value and current_user.id != self.id:
+            return {"id": self.id, "email": self.email}
+
         return {
             "id": self.id,
             "email": self.email,
