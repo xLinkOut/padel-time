@@ -3,11 +3,11 @@
 
 from datetime import datetime
 
-from flask import Blueprint, request
+from flask import Blueprint, current_app, request
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from models import Reservation, User, db
+from models import Reservation, User, db, Match, MatchUser
 
 auth = Blueprint("auth", __name__)
 api = Blueprint("api", __name__)
@@ -84,6 +84,9 @@ def create_reservations():
 
         if date < current_slot_date:
             return {"success": False, "message": "Cannot make reservations in the past"}, 400
+
+        if Match.query.filter_by(match_date=date).first():
+            return {"success": False, "message": "There is already a match scheduled for that date"}, 409
 
         # In ogni caso, sul database c'e' un vincolo unique sulla coppia (utente, data)
         # Potrebbe non essere bloccante, andrebbe ad inserire tutte le altre date
