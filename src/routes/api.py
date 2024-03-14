@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, request
 from flask_login import current_user, login_required
 
 from models import db
-from models.match import Match
+from models.game import Game
 from models.match_user import MatchUser
 from models.reservation import Reservation
 from models.user import UserRole
@@ -37,7 +37,7 @@ def create_reservations():
         if date < current_slot_date:
             return {"success": False, "message": "Cannot make reservations in the past"}, 400
 
-        if Match.query.filter_by(match_date=date).first():
+        if Game.query.filter_by(match_date=date).first():
             return {"success": False, "message": "There is already a match scheduled for that date"}, 409
 
         # In ogni caso, sul database c'e' un vincolo unique sulla coppia (utente, data)
@@ -57,7 +57,7 @@ def create_reservations():
         return {"success": True, "data": {**reservation.to_dict(), "players": len(reservation_players)}}
 
     elif reservation_players_count == current_app.players_for_match:
-        match = Match(match_date=date)
+        match = Game(match_date=date)
         db.session.add(match)
         for reservation in reservation_players:
             match_user = MatchUser(match=match, user=reservation.user)
@@ -113,8 +113,8 @@ def delete_reservation(reservation_id):
         return {"success": False, "message": "Cannot delete past reservations"}, 400
 
     if (
-        MatchUser.query.join(Match)
-        .filter(Match.match_date == reservation.match_date, MatchUser.user_id == current_user.id)
+        MatchUser.query.join(Game)
+        .filter(Game.slot == reservation.match_date, MatchUser.user_id == current_user.id)
         .first()
     ):
         return {"success": False, "message": "Cannot delete a reservation while in a match"}, 400
@@ -130,19 +130,25 @@ def delete_reservation(reservation_id):
 def get_matches():
     filters = []
 
-    if match_date := request.args.get("date"):
-        filters.append(Match.match_date == match_date)
+    if slot := request.args.get("slot"):
+        filters.append(Game.slot == slot)
     if current_user.role != UserRole.ADMIN.value:
         filters.append(MatchUser.user_id == current_user.id)
+    elif user_id := request.args.get("user_id"):
+        filters.append(MatchUser.user_id == user_id)
 
-    matches = Match.query.join(MatchUser).filter(*filters).all()
+    matches = Game.query.join(MatchUser).filter(*filters).all()
     return {"success": True, "data": [match.to_dict() for match in matches]}, 200
 
 
 @api_bp.get("/matches/<int:match_id>")
 @login_required
 def get_match(match_id):
-    match = Match.query.join(MatchUser).filter(Match.id == match_id, MatchUser.user_id == current_user.id).first()
+    filters = [Game.id == match_id]
+    if current_user.role != UserRole.ADMIN.value:
+        filters.append(MatchUser.user_id == current_user.id)
+    
+    match = Game.query.join(MatchUser).filter(*filters).first()
     if not match:
         return {"success": False, "message": "Match not found"}, 404
 
