@@ -46,7 +46,7 @@
                 </div>
                 <div class="col-auto">
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                        data-bs-target="#newGameModal">New game</button>
+                        data-bs-target="#createGameModal">New game</button>
                 </div>
             </div>
             <table id="gamesTable" class="table table-striped mt-3">
@@ -64,7 +64,7 @@
 
                 </tbody>
             </table>
-            <div id="blankState" class="text-center" style="display: none;">
+            <div id="gamesBlankState" class="mt-3 text-center" hidden>
                 <p>There are no games, create your first one!</p>
             </div>
         </main>
@@ -76,23 +76,19 @@
         </footer>
     </div>
 
-    <!-- Modale per richiedere nuove partite -->
-    <div class="modal fade" id="newGameModal" tabindex="-1" aria-labelledby="newGameModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
+    <div class="modal fade" id="createGameModal" tabindex="-1" aria-labelledby="newGameModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
+
                 <div class="modal-header">
-                    <h5 class="modal-title" id="newGameModalLabel">Nuova partita</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="newGameModalLabel">New game</h5>
+                    <button type="button" class="btn-close" id="newGameModalClose" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                
                 <div class="modal-body">
-                    <form id="newGameForm">
-                        <div class="mb-3">
-                            <label for="slotDatetime" class="form-label">Seleziona data e ora:</label>
-                            <input type="datetime-local" class="form-control" id="slotDatetime" name="slotDatetime"
-                                required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Invia richiesta</button>
-                    </form>
+                    <label for="slotDatetime" class="form-label">Select a date-time slot</label>
+                    <input type="datetime-local" class="form-control" id="newGameModalSlotInput" name="slotDatetime" required>
+                    <button type="submit" class="btn btn-primary">Create</button>
                 </div>
             </div>
         </div>
@@ -116,85 +112,40 @@
         document.documentElement.setAttribute('data-bs-theme', initialTheme);
 
         document.addEventListener("DOMContentLoaded", function () {
+            const gamesTable = document.getElementById('gamesTable').getElementsByTagName('tbody')[0];
+            const gamesBlankState = document.getElementById('gamesBlankState');
+            
             function loadGames() {
-                var gamesTable = document.getElementById('gamesTable');
-                var tbody = gamesTable.getElementsByTagName('tbody')[0];
-                var blankState = document.getElementById('blankState');
-
-                fetch('/api/games', {
+                fetch('{{ url_for("api.search_games") }}', {
                     method: 'GET',
-                    credentials: 'same-origin'
                 })
-                    .then(function (response) {
-                        if (!response.ok) {
-                            throw new Error('Errore nella richiesta.');
-                        }
-                        return response.json();
-                    })
-                    .then(function (data) {
-                        if (data.success) {
-                            tbody.innerHTML = ''; // Svuota la tabella prima di aggiungere nuove righe
-                            if (data.data.length > 0) {
-                                data.data.forEach(function (game) {
-                                    var row = tbody.insertRow();
-                                    row.innerHTML = `<td>${game.id}</td>
-                                                 <td>${game.slot}</td>
-                                                 <td>${game.created_by.username}</td>
-                                                 <td>${game.players.length}</td>
-                                                 <td>${game.ready ? 'Sì' : 'No'}</td>`;
-                                });
-                            } else {
-                                blankState.style.display = 'block'; // Mostra il blank state se non ci sono partite
-                            }
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        gamesBlankState.hidden = true;
+                        gamesTable.innerHTML = '';
+                        if (data.data.length > 0) {
+                            data.data.forEach(function (game) {
+                                var row = gamesTable.insertRow();
+                                row.innerHTML = `<td>${game.id}</td>
+                                                <td>${game.slot}</td>
+                                                <td>${game.created_by.username}</td>
+                                                <td>${game.players.length}</td>
+                                                <td>${game.ready ? 'Sì' : 'No'}</td>`;
+                            });
                         } else {
-                            console.error(data.message);
+                            gamesBlankState.hidden = false;
                         }
-                    })
-                    .catch(function (error) {
-                        console.error(error);
-                    });
+                    } else {
+                        console.error(data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error(error);
+                });
             }
 
-            // Carica le partite all'avvio della pagina
             loadGames();
-
-            var newGameForm = document.getElementById('newGameForm');
-
-            newGameForm.addEventListener('submit', function (event) {
-                event.preventDefault();
-                var formData = new FormData(newGameForm);
-                var slotDatetime = formData.get('slotDatetime');
-                slotDatetime += ':00';
-                fetch('/api/games', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ slots: [slotDatetime] }),
-                    credentials: 'same-origin'
-                })
-                    .then(function (response) {
-                        if (!response.ok) {
-                            throw new Error('Errore nella richiesta.');
-                        }
-                        return response.json();
-                    })
-                    .then(function (data) {
-                        if (data.success) {
-                            // Aggiorna la tabella delle partite
-                            loadGames();
-                            // Chiudi il modale
-                            var modal = new bootstrap.Modal(document.getElementById('newGameModal'));
-                            modal.hide();
-                        } else {
-                            console.error(data.message);
-                        }
-                    })
-                    .catch(function (error) {
-                        console.error(error);
-                    });
-            });
         });
     </script>
 
