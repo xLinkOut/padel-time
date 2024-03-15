@@ -86,9 +86,14 @@
                 </div>
                 
                 <div class="modal-body">
+                    
                     <label for="slotDatetime" class="form-label">Select a date-time slot</label>
+                    <div class="mb-3 alert alert-danger" id="newGameModalAlert" hidden></div>
                     <input type="datetime-local" class="form-control" id="newGameModalSlotInput" name="slotDatetime" required>
-                    <button type="submit" class="btn btn-primary">Create</button>
+                    
+                    <div class="mt-2 text-end">
+                        <button id="newGameModalCreateBtn" type="button" class="btn btn-primary">Create</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -115,6 +120,11 @@
             const gamesTable = document.getElementById('gamesTable').getElementsByTagName('tbody')[0];
             const gamesBlankState = document.getElementById('gamesBlankState');
             
+            const newGameModalAlert = document.getElementById('newGameModalAlert');
+            const newGameModalSlotInput = document.getElementById('newGameModalSlotInput');
+            const newGameModalCreateBtn = document.getElementById('newGameModalCreateBtn');
+            const newGameModalClose = document.getElementById('newGameModalClose');
+
             function loadGames() {
                 fetch('{{ url_for("api.search_games") }}', {
                     method: 'GET',
@@ -155,6 +165,38 @@
             }
 
             loadGames();
+
+            newGameModalCreateBtn.addEventListener('click', function () {
+                const slot = newGameModalSlotInput.value + ":00";
+                
+                fetch('{{ url_for("api.create_game") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        slots: [slot]
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        newGameModalAlert.hidden = true;
+                        newGameModalSlotInput.value = '';
+                        newGameModalSlotInput.classList.remove("is-invalid");
+                        loadGames();
+                        newGameModalClose.click();
+                    } else {
+                        newGameModalAlert.hidden = false;
+                        newGameModalAlert.innerHTML = data.message;
+                        newGameModalSlotInput.classList.toggle("is-invalid", true);
+                        console.error(data.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error(error);
+                })
+            });
         });
     </script>
 
