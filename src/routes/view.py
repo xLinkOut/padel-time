@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from flask import Blueprint, redirect, render_template, url_for
-from flask_login import current_user
+from flask import Blueprint, render_template
+from flask_login import login_required
 
 
 view_bp = Blueprint("view", __name__)
@@ -17,8 +17,6 @@ def signup():
 
 @view_bp.get("/")
 @view_bp.get("/dashboard")
-def dashboard():
-    if not current_user.is_authenticated:
-        return redirect(url_for("view.login"))
-    
+@login_required
+def dashboard():  
     return render_template("dashboard/dashboard.html")
