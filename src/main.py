@@ -22,7 +22,7 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY")
 
 # Flask login
 login_manager = LoginManager()
-login_manager.login_view = ""
+login_manager.login_view = "view.login"
 login_manager.init_app(app)
 
 # Misc
